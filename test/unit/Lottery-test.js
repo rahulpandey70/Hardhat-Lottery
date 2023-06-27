@@ -126,53 +126,73 @@ const { assert, expect } = require("chai")
                       vrfCoordinatorV2Mock.fulfillRandomWords(1, lottery.address)
                   ).to.be.revertedWith("nonexistent request")
               })
-              it("picks a winner, resets the lottery, and sends money", async () => {
-                  const additionalEntrants = 3
-                  const startingAccountIndex = 1 //deployer = 0
+              it("picks a winner , resest the lottery , and sends money", async () => {
+                  const additonalEnternace = 3
+                  const startingAccountIndex = 2 // deployer = 0
                   const accounts = await ethers.getSigners()
 
+                  // connecting 3 extra people to the rafffle , not including the deployer which makes it 4
                   for (
                       let i = startingAccountIndex;
-                      i < startingAccountIndex + additionalEntrants;
+                      i < startingAccountIndex + additonalEnternace;
                       i++
                   ) {
-                      const accountsConnectedLottery = lottery.connect(accounts[i])
-                      await accountsConnectedLottery.enterLottery({ value: lotteryEntranceFee })
+                      const accountConnectedLottery = lottery.connect(accounts[i])
+                      await accountConnectedLottery.enterLottery({ value: lotteryEntranceFee })
                   }
                   const startingTimeStamp = await lottery.getLatestTimeStamp()
 
+                  // performUpKeep {mock being chainLink keepers}
+                  // fullfillRandomWords {mock being the chainLink VRF}
+                  // IF WE ON TESTNET : we have to wait for the fullfillRandomWords
                   await new Promise(async (resolve, reject) => {
-                      lottery.once("Winner Picked", async () => {
+                      // Listening for the winnerPicked Event
+                      lottery.once("WinnerPicked", async () => {
                           console.log("Found the event")
+
                           try {
                               const recentWinner = await lottery.getRecentWinner()
+                              console.log(`the Last winner was : ${recentWinner}`)
+
+                              console.log(
+                                  "------------------------All Accounts------------------------"
+                              )
+                              console.log(accounts[0].address)
+                              console.log(accounts[1].address)
+                              console.log(accounts[2].address)
+                              console.log(accounts[3].address)
+
                               const lotteryState = await lottery.getLotteryState()
                               const endingTimeStamp = await lottery.getLatestTimeStamp()
                               const numPlayers = await lottery.getNumberOfPlayers()
-                              const winnerEndingBalance = await accounts[1].getBalance()
+                              const winnerEndingBalance = await accounts[2].getBalance()
+
+                              // asserts
                               assert.equal(numPlayers.toString(), "0")
                               assert.equal(lotteryState.toString(), "0")
                               assert(endingTimeStamp > startingTimeStamp)
 
                               assert.equal(
                                   winnerEndingBalance.toString(),
-                                  winnerStartingBalance.add(
-                                      lotteryEntranceFee
-                                          .mul(additionalEntrants)
-                                          .add(lotteryEntranceFee)
-                                          .toString()
-                                  )
+                                  winnerStartingBalace
+                                      .add(
+                                          lotteryEntranceFee
+                                              .mul(additonalEnternace)
+                                              .add(lotteryEntranceFee)
+                                      )
+                                      .toString()
                               )
                           } catch (error) {
                               reject(error)
                           }
                           resolve()
                       })
-                      // setting up listener
-                      // below doen, we will fire the event, and the listener will pick it up, and resolve
+                      // setting up a listener
+
+                      // below , we will fire the event , and the listner will pick it up , and resolve
                       const tx = await lottery.performUpkeep([])
                       const txReceipt = await tx.wait(1)
-                      const winnerStartingBalance = await accounts[1].getBalance()
+                      const winnerStartingBalace = await accounts[2].getBalance()
                       await vrfCoordinatorV2Mock.fulfillRandomWords(
                           txReceipt.events[1].args.requestId,
                           lottery.address
