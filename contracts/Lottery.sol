@@ -6,10 +6,10 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 
 /**Errors */
+error Lottery__UpKeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 lotteryState);
 error Lottery__NotEnoughETHEntered();
 error Lottery__TransferFailed();
 error Lottery__NotOpen();
-error Lottery__UpKeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 lotteryState);
 
 /** @title A sample Lottery contract
  *  @author Rahul Pandey
@@ -98,7 +98,7 @@ contract Lottery is VRFConsumerBaseV2, KeeperCompatibleInterface {
             );
         }
 
-        s_lotteryState == LotteryState.CALCULATING;
+        s_lotteryState = LotteryState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane,
             i_subscriptionId,

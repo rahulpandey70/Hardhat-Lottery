@@ -18,11 +18,13 @@ module.exports = {
     networks: {
         hardhat: {
             chainId: 31337,
-            blockConfirmations: 1,
+        },
+        localhost: {
+            chainId: 31337,
         },
         sepolia: {
             url: SEPOLIA_RPC_URL,
-            accounts: [SEPOLIA_PRIVATE_KEY],
+            accounts: SEPOLIA_PRIVATE_KEY !== undefined ? [SEPOLIA_PRIVATE_KEY] : [],
             chainId: 11155111,
             blockConfirmations: 6,
         },
@@ -31,6 +33,16 @@ module.exports = {
         apiKey: {
             sepolia: ETHERSCAN_API_KEY,
         },
+        customChains: [
+            {
+                network: "goerli",
+                chainId: 5,
+                urls: {
+                    apiURL: "https://api-goerli.etherscan.io/api",
+                    browserURL: "https://goerli.etherscan.io",
+                },
+            },
+        ],
     },
     gasReporter: {
         enabled: true,
